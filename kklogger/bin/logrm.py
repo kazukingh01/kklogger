@@ -6,19 +6,19 @@ from kklogger.util.com import str_to_datetime
 
 parser = argparse.ArgumentParser(
     description="This command is easy way to remove log files which have datetime format in file name.",
-    epilog="""
-    [(1) rmlog --path ./logs/pylog_YYYYMMDD.log --fr 20240101 --to 20240201]
-    [(2) rmlog --path ./logs/pylog_YYYYMMDD.log --nl 10]
+    epilog=r"""
+    [(1) kklogrm --path ./logs/pylog_\*_YYYYMMDD.log --fr 20240101 --to 20240201]
+    [(2) kklogrm --path ./logs/pylog_\*_YYYYMMDD.log --nl 10]
     """
 )
-parser.add_argument("--path", type=str, help="glob.globe(**) path. YYYY: year, MM: month, DD: day, X: extra number. ex) --path \*YYYYMMDD.X.log", required=True)
+parser.add_argument("--path", type=str, help=r"Targe files path. It's searched via glob.glob(**). YYYY: year, MM: month, DD: day, X: extra number. You have to escape * to \*. ex) --path \*YYYYMMDD.X.log", required=True)
 parser.add_argument("--fr",   type=str_to_datetime, help="target removed files from date. ex) --fr 20210101")
 parser.add_argument("--to",   type=str_to_datetime, help="target removed files to   date. ex) --ut 20210101")
 parser.add_argument("--nl",   type=int, help="target removed files sorted by created datetime until N files left. if '--nl 10', 10 files left. ex) --nl 10")
 parser.add_argument("--rm",   action='store_true', help="If you want to remove files after you check, add this option. ex) --rm", default=False)
 args = parser.parse_args()
-if args.time is not None:
-    assert args.time >= 1
+if args.nl is not None:
+    assert args.nl >= 1
     assert (args.fr is None) and (args.to is None)
 else:
     assert (args.fr is not None) and (args.to is not None)
@@ -28,12 +28,14 @@ else:
 LOGGER = set_logger(__name__)
 
 
-def rmlog(args):
+def logrm():
     LOGGER.info(f"{args}")
-    if args.time is not None:
+    if args.nl is not None:
         proc = subprocess.run(f"ls -t {args.path}", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
-        for x in proc.stdout.strip().split("\n")[args.time:]:
-            LOGGER.info(f"remove target: {x}")
+        for x in proc.stdout.strip().split("\n")[:args.nl]:
+            LOGGER.info(f"WON'T remove: {x}")
+        for x in proc.stdout.strip().split("\n")[args.nl:]:
+            LOGGER.warning(f"remove target: {x}")
             if args.rm: os.remove(x)
     else:
         path = args.path.replace("YYYY", "*").replace("MM", "*").replace("DD", "*").replace("X", "*")
@@ -48,11 +50,11 @@ def rmlog(args):
             if m is None:
                 return False
             else:
-                return datetime.datetime(int(m.group("year")), int(m.group("month")), int(m.group("day")))
+                return datetime.datetime(int(m.group("year")), int(m.group("month")), int(m.group("day")), tzinfo=datetime.UTC)
         list_date = [work(x, regex) for x in list_files]
         for x, y in zip(list_files, list_date):
             if isinstance(y, bool) and y == False:
                 continue
             if args.fr <= y <= args.to:
-                LOGGER.info(f"remove target: {x}")
+                LOGGER.warning(f"remove target: {x}")
                 if args.rm: os.remove(x)
