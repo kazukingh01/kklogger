@@ -1,2 +1,7 @@
 # kklogger
-my logger
+My logger package
+
+# Install
+```bash
+
+```
