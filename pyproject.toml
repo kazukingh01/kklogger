@@ -5,7 +5,7 @@ requires-python = ">= 3.12"
 description = "My logger package."
 
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=64.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
