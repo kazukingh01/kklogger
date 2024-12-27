@@ -75,9 +75,9 @@ class MyLogger(logging.Logger):
             exc_info=exc_info, extra=extra, stack_info=stack_info, stacklevel=2,
         )
 
-    def raise_error(self, msg: str, exception = Exception):
-        self.error(msg)
-        raise exception(msg)
+    def raise_error(self, msg: str, exception: Exception = Exception):
+        self.error(f"{type(exception)}: {msg}")
+        raise exception
 
     def set_internal(self):
         """ internal log """
