@@ -5,6 +5,7 @@ __all__ = [
     "set_logger",
     "set_loglevel",
     "MyLogger",
+    "LoggingNameException",
 ]
 
 
@@ -160,7 +161,7 @@ def set_logger(
             logger.set_logfile(logfilepath)
     return logger
 
-
+class LoggingNameException(Exception): pass
 def set_loglevel(name: str = None, log_level: str = "info"):
     """
     Set log level.
@@ -179,4 +180,4 @@ def set_loglevel(name: str = None, log_level: str = "info"):
         if name in _list_logname:
             logging.getLogger(name).setLevel(_dict_loglevel[log_level])
         else:
-            raise Exception("No name in logging space.")
+            raise LoggingNameException("No name in logging space.")
