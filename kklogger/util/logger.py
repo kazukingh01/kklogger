@@ -114,7 +114,7 @@ class MyLogger(logging.Logger):
 
 def set_logger(
     name: str, log_level: str="info", 
-    internal_log: bool=False, logfilepath: str=None, is_newlogfile: bool=False,
+    internal_log: bool=False, logfilepath: str=None, is_newlogfile: bool=False, is_force: bool=False,
     color_info:    str | list[str] = None,
     color_debug:   str | list[str] = None,
     color_warning: str | list[str] = ["BOLD", "YELLOW"],
@@ -134,14 +134,20 @@ def set_logger(
     global _dict_loglevel
     global _formatter
 
-    logger = logging.getLogger(name)
+    logger: MyLogger = logging.getLogger(name)
     logger.__class__ = MyLogger # Cast
     logger.color_info    = color_info
     logger.color_debug   = color_debug
     logger.color_warning = color_warning
     logger.color_error   = color_error
+    if is_force:
+        print("\033[33mForce to reset logger.\033[0m")
+        for handler in logger.handlers[:]:
+            logger.removeHandler(handler)
+        if name in _list_logname:
+            _list_logname.remove(name)        
     if name in _list_logname:
-        pass
+        logger.warning("Logger already exists.")
     else:
         # stdout
         s_handler = logging.StreamHandler()
@@ -154,7 +160,7 @@ def set_logger(
             logger.set_internal()
         if logfilepath is not None:
             time        = datetime.datetime.now()
-            logfilepath = logfilepath.replace("%YYYY%",time.strftime("%Y")).replace("%MM%",time.strftime("%m")).replace("%DD%",time.strftime("%d"))
+            logfilepath = logfilepath.replace("%YYYY%",time.strftime("%Y")).replace("%MM%",time.strftime("%m")).replace("%DD%",time.strftime("%d")).replace("%hh%",time.strftime("%H")).replace("%mm%",time.strftime("%M")).replace("%ss%",time.strftime("%S"))
             if is_newlogfile:
                 try: os.remove(logfilepath)
                 except FileNotFoundError: pass
